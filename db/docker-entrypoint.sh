@@ -121,9 +121,9 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 				*.sql.gz) echo "$0: running $f"; gunzip -c "$f" | "${mysql[@]}"; echo ;;
 				*)        echo "$0: ignoring $f" ;;
 			esac
-			echo 1 > /status/db.status
+			
 		done
-
+		
 		echo
 		echo 'MySQL init process done. Ready for start up.'
 		echo 
@@ -140,5 +140,5 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 	  
 	fi
 fi
-
+echo 1 > /status/db.status
 exec "$@"

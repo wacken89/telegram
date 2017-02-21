@@ -19,7 +19,7 @@ db:
   restart: always
   build: ./db
   ports:
-    - "8765:3306"
+    - "3306:3306"
   environment:
     - MYSQL_RANDOM_ROOT_PASSWORD=yes
     - MYSQL_DATABASE=observe

@@ -3,28 +3,21 @@
 import vars
 import MySQLdb
 
-db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
-cursor = db.cursor()
+def notification_check(telegramid):
+  db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
+  cursor = db.cursor()
 
+def notification(telegramid, value):
+  db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
+  cursor = db.cursor()
+  cursor.execute("SELECT id, COUNT(*) FROM users WHERE telegram_id = %s GROUP BY id" % (telegramid))
+  row_count = cursor.rowcount
+  print(row_count)
+  db.close()
+  return row_count
 
-sql = "SELECT * FROM users;"
-try:
-   # Execute the SQL command
-   cursor.execute(sql)
-   # Fetch all the rows in a list of lists.
-   results = cursor.fetchall()
-   for row in results:
-      id = row[0]
-      telegram_id = row[1]
-      username = row[2]
-      blocked = row[3]
-      show_pics = row[4]
-      # Now print fetched result
-      print "id=%s,telegram_id=%s,username=%s,blocked=%s,show_pics=%s" % \
-             (id, telegram_id, username, blocked, sh )
-except:
-   print "Error: unable to fecth data"
-
-
-# disconnect from server
-db.close()
+telegramid = 1
+if checkUser(telegramid) == 1:
+  print 'exists'
+else
+  print "non exists"
