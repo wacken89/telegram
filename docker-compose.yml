@@ -10,10 +10,13 @@ bot:
 
 checker:
   build: ./checker
-  volumes:
-    - /docker_storage/observe/ftp:/checker
   links: 
     - db:mysql
+  volumes:
+    - /docker_storage/observe/ftp:/checker
+    - /docker_storage/observe/status:/status
+  container_name: checker.telegram
+
 
 db:
   restart: always
