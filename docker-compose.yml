@@ -3,7 +3,9 @@ bot:
   links:
     - db:mysql
   environment:
-    - TELEGRAM_API=<API>
+    - TELEGRAM_API=335087225:AAHImO0Li0sGd9XbfGvX_2dfIdDWTF4Yb3w
+  volumes:
+    - /docker_storage/observe/status:/status
   container_name: bot.telegram
 
 checker:
@@ -15,15 +17,16 @@ checker:
 
 db:
   restart: always
-  image: mysql
+  build: ./db
   ports:
     - "8765:3306"
   environment:
     - MYSQL_RANDOM_ROOT_PASSWORD=yes
-    - MYSQL_DATABASE=<database name>
-    - MYSQL_USER=<database user>
-    - MYSQL_PASSWORD=<database password>
+    - MYSQL_DATABASE=observe
+    - MYSQL_USER=observeUser
+    - MYSQL_PASSWORD=observePassword
   volumes:
     - /docker_storage/observe/db:/var/lib/mysql
-    - ./mysql/init.dump/:/docker-entrypoint-initdb.d
+    - /docker_storage/observe/status:/status
+    - ./db/init.dump/:/docker-entrypoint-initdb.d
   container_name: db.telegram

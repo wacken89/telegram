@@ -44,11 +44,11 @@ def handle_start(message):
      cursor.execute(sql)
      # Commit your changes in the database
      db.commit()
-     bot.send_message(message.chat.id, "Everething GOOD" + " " + message.from_user.first_name )
+     bot.send_message(message.chat.id, message.from_user.first_name + " " +  "was added to database" )
   except:
      # Rollback in case there is any error
      db.rollback()
-     bot.send_message(message.chat.id, "Everething BAD" + " " + message.from_user.first_name )
+     bot.send_message(message.chat.id,  message.from_user.first_name + " " + "wasn't added to database. Please ask administrator" )
 
   # disconnect from server
   db.close()
@@ -70,7 +70,15 @@ def handle_start(message):
       blocked = row[3]
       show_pics = row[4]
       # Now print fetched result
-      answer = "ID in Database:  %s\nTelegram ID:  %s\nName:  %s\nBlocked user:  %s\nShow pictures: %s\n" % (id, telegram_id, username, blocked, show_pics )
+      if (blocked == 1) : 
+        blocked_print = 'yes'
+      else:
+        blocked_print = 'no'
+      if (show_pics == 1):
+        show_pics_print = 'yes'
+      else:
+        show_pics_print = 'no'
+      answer = "ID in Database:  %s\nTelegram ID:  %s\nName:  %s\nBlocked user:  %s\nShow pictures: %s\n" % (id, telegram_id, username, blocked_print, show_pics_print )
       bot.send_message(message.chat.id, answer)
   except:
      print "Error: unable to fecth data"
