@@ -16,10 +16,29 @@ def checkUser(telegramid):
   cursor = db.cursor()
   cursor.execute("SELECT id, COUNT(*) FROM users WHERE telegram_id = %s GROUP BY id" % (telegramid))
   row_count = cursor.rowcount
-  print(row_count)
   db.close()
   return row_count
 
+def notificationCheck(telegramid):
+  db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
+  cursor = db.cursor()
+  cursor.execute("SELECT notifications  FROM users WHERE telegram_id = %s" % (telegramid))
+  return cursor.fetchone()[0]
+  db.close()
+
+def notificationModify(action, telegramid):
+  db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
+  cursor = db.cursor()
+  sql = "UPDATE users SET notifications ='%s' WHERE telegram_id='%s'" % (action, telegramid)
+  try:
+     # Execute the SQL command
+     cursor.execute(sql)
+     # Commit your changes in the database
+     db.commit()
+  except:
+     # Rollback in case there is any error
+     db.rollback()
+  
 
 def log(message, answer):
   sys.stderr.write("\n-------------")
@@ -35,7 +54,7 @@ def log(message, answer):
 def handle_start(message):
   user_markup = telebot.types.ReplyKeyboardMarkup(True)
   user_markup.row('/start', '/stop', '/join', '/help')
-  user_markup.row('/Notificaton on', '/Notificaton off')
+  user_markup.row('/notificaton_on', '/notificaton_off')
   user_markup.row('/listusers', '/blockuser', '/deleteuser')
   bot.send_message(message.from_user.id, "welcome..", reply_markup=user_markup)
 
@@ -50,7 +69,7 @@ def handle_join(message):
   else:
     db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
     cursor = db.cursor()
-    sql = "INSERT INTO users(telegram_id, username, blocked, show_pics) VALUES ('%s', '%s' , 1, 1)" % (message.from_user.id ,message.from_user.first_name + " " + message.from_user.last_name)
+    sql = "INSERT INTO users(telegram_id, username, active, notifications, admin) VALUES ('%s', '%s' , 0, 1, 0)" % (message.from_user.id ,message.from_user.first_name + " " + message.from_user.last_name)
     try:
        # Execute the SQL command
        cursor.execute(sql)
@@ -64,6 +83,29 @@ def handle_join(message):
 
     # disconnect from server
     db.close()
+
+@bot.message_handler(commands=['notificaton_on'])
+def handle_listusers(message):
+  if checkUser(message.from_user.id) == 1:
+    if notificationCheck(message.from_user.id) == 1:
+      bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are receiving messages")
+    elif notificationCheck(message.from_user.id) == 0:
+      notificationModify(1, message.from_user.id)
+      bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are start receiving messages")
+    else:
+      bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are not in database. Please join us click on /join" )
+
+@bot.message_handler(commands=['notificaton_off'])
+def handle_listusers(message):
+  if checkUser(message.from_user.id) == 1:
+    if notificationCheck(message.from_user.id) == 0:
+      bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are not receiving messages")
+    elif notificationCheck(message.from_user.id) == 1:
+      notificationModify(0, message.from_user.id)
+      bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are stop receiving messages")
+  else:
+    bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are not in database. Please join us click on /join" )
+
 
 @bot.message_handler(commands=['listusers'])
 def handle_listusers(message):
@@ -79,18 +121,23 @@ def handle_listusers(message):
       id = row[0]
       telegram_id = row[1]
       username = row[2]
-      blocked = row[3]
-      show_pics = row[4]
+      active = row[3]
+      notifications = row[4]
+      admin = row[5]
       # Now print fetched result
-      if (blocked == 1) : 
-        blocked_print = 'yes'
+      if (active == 1) : 
+        active_print = 'enabled'
       else:
-        blocked_print = 'no'
-      if (show_pics == 1):
-        show_pics_print = 'yes'
+        active_print = 'disabled'
+      if (notifications == 1):
+        notifications_print = 'yes'
       else:
-        show_pics_print = 'no'
-      answer = "ID in Database:  %s\nTelegram ID:  %s\nName:  %s\nBlocked user:  %s\nShow pictures: %s\n" % (id, telegram_id, username, blocked_print, show_pics_print )
+        notifications_print = 'no'
+      if (admin == 1):
+        admin_print = 'admin'
+      else:
+        admin_print = 'user'
+      answer = "ID in Database:  %s\nTelegram ID:  %s\nName:  %s\nUser status:  %s\nAdmin status: %s\nReceive messages: %s\n" % (id, telegram_id, username, active_print, admin_print, notifications_print )
       bot.send_message(message.chat.id, answer)
   except:
      print "Error: unable to fecth data"
