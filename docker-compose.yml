@@ -2,8 +2,6 @@ bot:
   build: ./bot
   links:
     - db:mysql
-  environment:
-    - TELEGRAM_API=335087225:AAHImO0Li0sGd9XbfGvX_2dfIdDWTF4Yb3w
   volumes:
     - /docker_storage/observe/status:/status
   container_name: bot.telegram
@@ -24,6 +22,7 @@ db:
   ports:
     - "8765:3306"
   environment:
+    - TELEGRAM_API=335087225:AAHImO0Li0sGd9XbfGvX_2dfIdDWTF4Yb3w
     - MYSQL_RANDOM_ROOT_PASSWORD=yes
     - MYSQL_DATABASE=observe
     - MYSQL_USER=observeUser

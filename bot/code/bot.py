@@ -62,8 +62,9 @@ def handle_start(message):
   user_markup = telebot.types.ReplyKeyboardMarkup(True)
   user_markup.row('/start', '/stop', '/join', '/help')
   user_markup.row('/notificaton_on', '/notificaton_off')
-  if adminCheck(message.from_user.id) == 1:
-    user_markup.row('/listusers', '/blockuser', '/deleteuser')
+  if checkUser(message.from_user.id) >= 1:
+    if adminCheck(message.from_user.id) == 1:
+      user_markup.row('/listusers', '/blockuser', '/deleteuser')
   bot.send_message(message.from_user.id, "welcome..", reply_markup=user_markup)
 
 @bot.message_handler(commands=['help'])
@@ -72,12 +73,15 @@ def handle_help(message):
 
 @bot.message_handler(commands=['join'])
 def handle_join(message):
-  if checkUser(message.from_user.id) == 1:
+  if checkUser(message.from_user.id) >= 1:
     bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you've already in database" )
   else:
     db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
     cursor = db.cursor()
-    sql = "INSERT INTO users(telegram_id, username, active, notifications, admin) VALUES ('%s', '%s' , 0, 1, 0)" % (message.from_user.id ,message.from_user.first_name + " " + message.from_user.last_name)
+    if message.from_user.last_name:
+      sql = "INSERT INTO users(telegram_id, username, active, notifications, admin) VALUES ('%s', '%s' , 0, 1, 0)" % (message.from_user.id ,message.from_user.first_name + " " + message.from_user.last_name)
+    else:
+      sql = "INSERT INTO users(telegram_id, username, active, notifications, admin) VALUES ('%s', '%s' , 0, 1, 0)" % (message.from_user.id ,message.from_user.first_name)
     try:
        # Execute the SQL command
        cursor.execute(sql)
@@ -94,7 +98,7 @@ def handle_join(message):
 
 @bot.message_handler(commands=['notificaton_on'])
 def handle_listusers(message):
-  if checkUser(message.from_user.id) == 1:
+  if checkUser(message.from_user.id) >= 1:
     if notificationCheck(message.from_user.id) == 1:
       bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are receiving messages")
     elif notificationCheck(message.from_user.id) == 0:
@@ -105,7 +109,7 @@ def handle_listusers(message):
 
 @bot.message_handler(commands=['notificaton_off'])
 def handle_listusers(message):
-  if checkUser(message.from_user.id) == 1:
+  if checkUser(message.from_user.id) >= 1:
     if notificationCheck(message.from_user.id) == 0:
       bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are not receiving messages")
     elif notificationCheck(message.from_user.id) == 1:
@@ -166,7 +170,6 @@ def handle_text(message):
   elif message.text == "bye" or message.text == "Bye":
   	bot.send_message(message.chat.id, "Good bye")
   else:
-    log(message, answer)
     bot.send_message(message.chat.id, answer)
 
 bot.polling(none_stop=True, interval=0)
