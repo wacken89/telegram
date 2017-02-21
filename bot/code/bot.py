@@ -62,9 +62,8 @@ def handle_start(message):
   user_markup = telebot.types.ReplyKeyboardMarkup(True)
   user_markup.row('/start', '/stop', '/join', '/help')
   user_markup.row('/notificaton_on', '/notificaton_off')
-  user_markup.row('/listusers', '/blockuser', '/deleteuser')
   if adminCheck(message.from_user.id) == 1:
-    user_markup.row('/fuck all users')
+    user_markup.row('/listusers', '/blockuser', '/deleteuser')
   bot.send_message(message.from_user.id, "welcome..", reply_markup=user_markup)
 
 @bot.message_handler(commands=['help'])
