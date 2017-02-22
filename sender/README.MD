@@ -8,6 +8,10 @@ Download docker from [official site](https://www.docker.com/products/docker)
 
 **Starting project**
 
+Rename `docker-compose.yml.example` to `docker-compose.yml`
+
+Set `TELEGRAM_API, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD` with your data
+
 Run docker-compose file:
 
 ```bash

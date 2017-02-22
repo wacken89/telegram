@@ -1,0 +1,34 @@
+bot:
+  build: ./bot
+  links:
+    - db:mysql
+  volumes:
+    - /docker_storage/observe/status:/status
+  container_name: bot.telegram
+
+checker:
+  build: ./checker
+  links: 
+    - db:mysql
+  volumes:
+    - /docker_storage/observe/checker:/checker
+    - /docker_storage/observe/status:/status
+  container_name: checker.telegram
+
+
+db:
+  restart: always
+  build: ./db
+  ports:
+    - "127.0.0.1:8765:3306"
+  environment:
+    - TELEGRAM_API=< TELERGRAM API >
+    - MYSQL_RANDOM_ROOT_PASSWORD=yes
+    - MYSQL_DATABASE=< MYSQL DATABASE >
+    - MYSQL_USER=< MYSQL_USER >
+    - MYSQL_PASSWORD=< MYSQL PASSWORD >
+  volumes:
+    - /docker_storage/observe/db:/var/lib/mysql
+    - /docker_storage/observe/status:/status
+    - ./db/init.dump/:/docker-entrypoint-initdb.d
+  container_name: db.telegram
