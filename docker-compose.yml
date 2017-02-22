@@ -22,11 +22,11 @@ db:
   ports:
     - "127.0.0.1:8765:3306"
   environment:
-    - TELEGRAM_API=335087225:AAHImO0Li0sGd9XbfGvX_2dfIdDWTF4Yb3w
+    - TELEGRAM_API=< TELERGRAM API >
     - MYSQL_RANDOM_ROOT_PASSWORD=yes
-    - MYSQL_DATABASE=observe
-    - MYSQL_USER=observeUser
-    - MYSQL_PASSWORD=observePassword
+    - MYSQL_DATABASE=< MYSQL DATABASE >
+    - MYSQL_USER=< MYSQL_USER >
+    - MYSQL_PASSWORD=< MYSQL PASSWORD >
   volumes:
     - /docker_storage/observe/db:/var/lib/mysql
     - /docker_storage/observe/status:/status
