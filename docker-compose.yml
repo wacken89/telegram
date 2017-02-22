@@ -11,7 +11,7 @@ checker:
   links: 
     - db:mysql
   volumes:
-    - /docker_storage/observe/ftp:/checker
+    - /docker_storage/observe/checker:/checker
     - /docker_storage/observe/status:/status
   container_name: checker.telegram
 
@@ -20,7 +20,7 @@ db:
   restart: always
   build: ./db
   ports:
-    - "8765:3306"
+    - "127.0.0.1:8765:3306"
   environment:
     - TELEGRAM_API=335087225:AAHImO0Li0sGd9XbfGvX_2dfIdDWTF4Yb3w
     - MYSQL_RANDOM_ROOT_PASSWORD=yes

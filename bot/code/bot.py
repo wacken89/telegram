@@ -7,7 +7,6 @@ import datetime
 import MySQLdb
 
 bot = telebot.TeleBot(vars.token)
-
 print(bot.get_me())
 
 

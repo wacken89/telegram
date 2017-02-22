@@ -12,4 +12,4 @@ j2 vars.py.j2 > vars.py
 echo
 echo "Starting Telegram Checker"
 echo
-python checker.py
+python checker.py /checker
