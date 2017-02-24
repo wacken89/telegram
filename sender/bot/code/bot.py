@@ -120,40 +120,44 @@ def handle_listusers(message):
 
 @bot.message_handler(commands=['listusers'])
 def handle_listusers(message):
-  db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
-  cursor = db.cursor()
-  sql = "SELECT * FROM users;"
-  try:
-     # Execute the SQL command
-     cursor.execute(sql)
-     # Fetch all the rows in a list of lists.
-     results = cursor.fetchall()
-     for row in results:
-      id = row[0]
-      telegram_id = row[1]
-      username = row[2]
-      active = row[3]
-      notifications = row[4]
-      admin = row[5]
-      # Now print fetched result
-      if (active == 1) : 
-        active_print = 'enabled'
-      else:
-        active_print = 'disabled'
-      if (notifications == 1):
-        notifications_print = 'yes'
-      else:
-        notifications_print = 'no'
-      if (admin == 1):
-        admin_print = 'admin'
-      else:
-        admin_print = 'user'
-      answer = "ID in Database:  %s\nTelegram ID:  %s\nName:  %s\nUser status:  %s\nAdmin status: %s\nReceive messages: %s\n" % (id, telegram_id, username, active_print, admin_print, notifications_print )
-      bot.send_message(message.chat.id, answer)
-  except:
-     print "Error: unable to fecth data"
-     bot.send_message(message.chat.id, "Error: unable to fecth data")
-  db.close()
+  if adminCheck(message.from_user.id) == 1:
+    db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
+    cursor = db.cursor()
+    sql = "SELECT * FROM users;"
+    try:
+       # Execute the SQL command
+       cursor.execute(sql)
+       # Fetch all the rows in a list of lists.
+       results = cursor.fetchall()
+       for row in results:
+        id = row[0]
+        telegram_id = row[1]
+        username = row[2]
+        active = row[3]
+        notifications = row[4]
+        admin = row[5]
+        # Now print fetched result
+        if (active == 1) : 
+          active_print = 'enabled'
+        else:
+          active_print = 'disabled'
+        if (notifications == 1):
+          notifications_print = 'yes'
+        else:
+          notifications_print = 'no'
+        if (admin == 1):
+          admin_print = 'admin'
+        else:
+          admin_print = 'user'
+        answer = "ID in Database:  %s\nTelegram ID:  %s\nName:  %s\nUser status:  %s\nAdmin status: %s\nReceive messages: %s\n" % (id, telegram_id, username, active_print, admin_print, notifications_print )
+        bot.send_message(message.chat.id, answer)
+    except:
+       print "Error: unable to fecth data"
+       bot.send_message(message.chat.id, "Error: unable to fecth data")
+    db.close()
+  else:
+    bot.send_message(message.chat.id, "You are not allowed execute this command")
+
 
 @bot.message_handler(commands=['blockuser'])
 def handle_blockuser(message):
