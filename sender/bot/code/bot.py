@@ -59,11 +59,11 @@ def log(message, answer):
 @bot.message_handler(commands=['start'])
 def handle_start(message):
   user_markup = telebot.types.ReplyKeyboardMarkup(True)
-  user_markup.row('/start', '/stop', '/join', '/help')
+  user_markup.row('/start', '/join', '/help')
   user_markup.row('/notificaton_on', '/notificaton_off')
   if checkUser(message.from_user.id) >= 1:
     if adminCheck(message.from_user.id) == 1:
-      user_markup.row('/listusers', '/blockuser', '/deleteuser')
+      user_markup.row('/listusers')
   bot.send_message(message.from_user.id, "welcome..", reply_markup=user_markup)
 
 @bot.message_handler(commands=['help'])
@@ -150,7 +150,13 @@ def handle_listusers(message):
         else:
           admin_print = 'user'
         answer = "ID in Database:  %s\nTelegram ID:  %s\nName:  %s\nUser status:  %s\nAdmin status: %s\nReceive messages: %s\n" % (id, telegram_id, username, active_print, admin_print, notifications_print )
-        bot.send_message(message.chat.id, answer)
+        keyboard = telebot.types.InlineKeyboardMarkup()
+        callback_button = telebot.types.InlineKeyboardButton(text="Block" , callback_data="test")
+        callback_button1 = telebot.types.InlineKeyboardButton(text="Delete", callback_data="test")
+        callback_button2 = telebot.types.InlineKeyboardButton(text="Grant Admin privileges" , callback_data="admin")
+        keyboard.add(callback_button, callback_button1)
+        keyboard.add(callback_button2)
+        bot.send_message(message.chat.id, answer, reply_markup=keyboard)
     except:
        print "Error: unable to fecth data"
        bot.send_message(message.chat.id, "Error: unable to fecth data")
@@ -167,12 +173,22 @@ def handle_blockuser(message):
 def handle_text(message):
   answer = "I don't understand"
   if message.text == "Hello" or message.text == "hello":
-    answer = "Hello " + message.from_user.first_name
-    log(message, answer)
-    bot.send_message(message.chat.id, answer)
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    callback_button = telebot.types.InlineKeyboardButton(text="Нажми меня", callback_data="test")
+    keyboard.add(callback_button)
+    bot.send_message(message.chat.id, "Я – сообщение из обычного режима", reply_markup=keyboard)
   elif message.text == "bye" or message.text == "Bye":
-  	bot.send_message(message.chat.id, "Good bye")
+    bot.send_message(message.chat.id, "Good bye")
+  elif message.text == "test" or message.text == "test":
+    bot.send_message(message.chat.id, "TEST ME")
   else:
     bot.send_message(message.chat.id, answer)
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+    # Если сообщение из чата с ботом
+    if call.message:
+        if call.data == "test":
+            bot.send_message(call.message.chat.id, "HELLO")
 
 bot.polling(none_stop=True, interval=0)
