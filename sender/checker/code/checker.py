@@ -29,7 +29,7 @@ class MyHandler(PatternMatchingEventHandler):
         self.process(event)
         db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
         cursor = db.cursor()
-        sql = "SELECT telegram_id FROM observe.users WHERE active = 1 AND notifications = 1 ;"
+        sql = "SELECT telegram_id FROM users WHERE active = 1 AND notifications = 1 ;"
         try:
           # Execute the SQL command
           cursor.execute(sql)
