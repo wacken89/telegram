@@ -78,9 +78,9 @@ def handle_join(message):
     db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
     cursor = db.cursor()
     if message.from_user.last_name:
-      sql = "INSERT INTO users(telegram_id, username, active, notifications, admin) VALUES ('%s', '%s' , 1, 1, 0)" % (message.from_user.id ,message.from_user.first_name + " " + message.from_user.last_name)
+      sql = "INSERT INTO users(telegram_id, username, active, notifications, admin) VALUES ('%s', '%s' , 0, 0, 0)" % (message.from_user.id ,message.from_user.first_name + " " + message.from_user.last_name)
     else:
-      sql = "INSERT INTO users(telegram_id, username, active, notifications, admin) VALUES ('%s', '%s' , 1, 1, 0)" % (message.from_user.id ,message.from_user.first_name)
+      sql = "INSERT INTO users(telegram_id, username, active, notifications, admin) VALUES ('%s', '%s' , 0, 0, 0)" % (message.from_user.id ,message.from_user.first_name)
     try:
        # Execute the SQL command
        cursor.execute(sql)
