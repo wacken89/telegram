@@ -78,9 +78,10 @@ def handle_join(message):
     db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
     cursor = db.cursor()
     if message.from_user.last_name:
-      sql = "INSERT INTO users(telegram_id, username, active, notifications, admin) VALUES ('%s', '%s' , 0, 0, 0)" % (message.from_user.id ,message.from_user.first_name + " " + message.from_user.last_name)
+      fullName = message.from_user.first_name + " " + message.from_user.last_name
     else:
-      sql = "INSERT INTO users(telegram_id, username, active, notifications, admin) VALUES ('%s', '%s' , 0, 0, 0)" % (message.from_user.id ,message.from_user.first_name)
+      fullName = message.from_user.first_name
+    sql = "INSERT INTO users(telegram_id, username, active, notifications, admin) VALUES ('%s', '%s' , 0, 0, 0)" % (message.from_user.id , fullName)
     try:
        # Execute the SQL command
        cursor.execute(sql)
@@ -150,13 +151,7 @@ def handle_listusers(message):
         else:
           admin_print = 'user'
         answer = "ID in Database:  %s\nTelegram ID:  %s\nName:  %s\nUser status:  %s\nAdmin status: %s\nReceive messages: %s\n" % (id, telegram_id, username, active_print, admin_print, notifications_print )
-        keyboard = telebot.types.InlineKeyboardMarkup()
-        callback_button = telebot.types.InlineKeyboardButton(text="Block" , callback_data="test")
-        callback_button1 = telebot.types.InlineKeyboardButton(text="Delete", callback_data="test")
-        callback_button2 = telebot.types.InlineKeyboardButton(text="Grant Admin privileges" , callback_data="admin")
-        keyboard.add(callback_button, callback_button1)
-        keyboard.add(callback_button2)
-        bot.send_message(message.chat.id, answer, reply_markup=keyboard)
+        bot.send_message(message.chat.id, answer)
     except:
        print "Error: unable to fecth data"
        bot.send_message(message.chat.id, "Error: unable to fecth data")
