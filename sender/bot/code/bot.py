@@ -78,7 +78,7 @@ def log(message, answer):
                                                                 message.text))
   sys.stderr.write(answer)
 
-@bot.message_handler(commands=['start', 'refresh', 'Cancel'])
+@bot.message_handler(commands=['start', 'refresh'])
 def handle_start(message):
   user_markup = telebot.types.ReplyKeyboardMarkup(True)
   user_markup.row('/join', '/help', '/refresh')
