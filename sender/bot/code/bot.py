@@ -86,7 +86,7 @@ def handle_start(message):
   if checkUser(message.from_user.id) >= 1:
     if adminCheck(message.from_user.id) == 1:
       user_markup.row('/listusers', '/modifiy')
-  bot.send_message(message.from_user.id, "Let's start ...", reply_markup=user_markup)
+  bot.send_message(message.from_user.id, "Enabling custom keyboard ...", reply_markup=user_markup)
 
 @bot.message_handler(commands=['help'])
 def handle_help(message):
@@ -214,7 +214,7 @@ def process_age_step(message):
       user = user_dict[chat_id]
       user.telegramID = telegramID
       markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-      markup.add('Enable/Disable', 'Delete')
+      markup.add('Enable/Disable', 'Delete', 'Admin')
       msg = bot.reply_to(message, 'What action you want do?', reply_markup=markup)
       bot.register_next_step_handler(msg, process_action_step)
   except Exception as e:
@@ -249,8 +249,22 @@ def process_action_step(message):
         else:
           bot.send_message(chat_id, 'Telegram ID:' + " " + str(user.telegramID) + " " + 'not in database')
           handle_start(message)
-      else:
-          raise Exception()
+      elif (action == u'Admin'):
+        if checkUser(str(user.telegramID)) >= 1:
+          column = 'admin'
+          if adminCheck(str(user.telegramID)) == 1:
+            entryModify(column, 0, str(user.telegramID))
+            bot.send_message(chat_id, 'Telegram ID:' + " " + str(user.telegramID) + " " + 'admin enabled. Disabling .... ')
+            handle_start(message)
+          elif adminCheck(str(user.telegramID)) == 0:
+            entryModify(column, 1, str(user.telegramID))
+            bot.send_message(chat_id, 'Telegram ID:' + " " + str(user.telegramID) + " " + 'admin disabled. Enabling .... ')
+            handle_start(message)
+        else:
+          bot.send_message(chat_id, 'Telegram ID:' + " " + str(user.telegramID) + " " + 'not in database')
+          handle_start(message)
+      else:    
+        raise Exception()
   except Exception as e:
       bot.reply_to(message, 'NOT OK')
 
