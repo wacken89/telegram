@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import telebot
+from telebot import types
 import vars
 import sys
 import datetime
@@ -8,7 +9,7 @@ import MySQLdb
 
 bot = telebot.TeleBot(vars.token)
 print(bot.get_me())
-
+user_dict = {}
 
 def checkUser(telegramid):
   db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
@@ -25,6 +26,13 @@ def adminCheck(telegramid):
   return cursor.fetchone()[0]
   db.close()
 
+def enableCheck(telegramid):
+  db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
+  cursor = db.cursor()
+  cursor.execute("SELECT active FROM users WHERE telegram_id = %s" % (telegramid))
+  return cursor.fetchone()[0]
+  db.close()
+
 def notificationCheck(telegramid):
   db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
   cursor = db.cursor()
@@ -32,10 +40,10 @@ def notificationCheck(telegramid):
   return cursor.fetchone()[0]
   db.close()
 
-def notificationModify(action, telegramid):
+def entryModify(column ,action, telegramid):
   db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
   cursor = db.cursor()
-  sql = "UPDATE users SET notifications ='%s' WHERE telegram_id='%s'" % (action, telegramid)
+  sql = "UPDATE users SET %s ='%s' WHERE telegram_id='%s'" % (column, action, telegramid)
   try:
      # Execute the SQL command
      cursor.execute(sql)
@@ -44,7 +52,21 @@ def notificationModify(action, telegramid):
   except:
      # Rollback in case there is any error
      db.rollback()
-  
+  db.close()
+
+def deleteUser(telegramid):
+  db = MySQLdb.connect(vars.mysqlHost,vars.mysqUser,vars.mysqlPassword,vars.mysqlDatabase)
+  cursor = db.cursor()
+  sql = "DELETE FROM users WHERE telegram_id = '%s'" % (telegramid)
+  try:
+     # Execute the SQL command
+     cursor.execute(sql)
+     # Commit your changes in the database
+     db.commit()
+  except:
+     # Rollback in case there is any error
+     db.rollback()
+  db.close()
 
 def log(message, answer):
   sys.stderr.write("\n-------------")
@@ -56,15 +78,15 @@ def log(message, answer):
                                                                 message.text))
   sys.stderr.write(answer)
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start', 'refresh', 'Cancel'])
 def handle_start(message):
   user_markup = telebot.types.ReplyKeyboardMarkup(True)
-  user_markup.row('/start', '/join', '/help')
+  user_markup.row('/join', '/help', '/refresh')
   user_markup.row('/notificaton_on', '/notificaton_off')
   if checkUser(message.from_user.id) >= 1:
     if adminCheck(message.from_user.id) == 1:
-      user_markup.row('/listusers')
-  bot.send_message(message.from_user.id, "welcome..", reply_markup=user_markup)
+      user_markup.row('/listusers', '/modifiy')
+  bot.send_message(message.from_user.id, "Let's start ...", reply_markup=user_markup)
 
 @bot.message_handler(commands=['help'])
 def handle_help(message):
@@ -98,22 +120,24 @@ def handle_join(message):
 
 @bot.message_handler(commands=['notificaton_on'])
 def handle_listusers(message):
+  column = 'notifications'
   if checkUser(message.from_user.id) >= 1:
     if notificationCheck(message.from_user.id) == 1:
       bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are receiving messages")
     elif notificationCheck(message.from_user.id) == 0:
-      notificationModify(1, message.from_user.id)
+      entryModify(column, 1, message.from_user.id)
       bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are start receiving messages")
     else:
       bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are not in database. Please join us click on /join" )
 
 @bot.message_handler(commands=['notificaton_off'])
 def handle_listusers(message):
+  column = 'notifications'
   if checkUser(message.from_user.id) >= 1:
     if notificationCheck(message.from_user.id) == 0:
       bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are not receiving messages")
     elif notificationCheck(message.from_user.id) == 1:
-      notificationModify(0, message.from_user.id)
+      entryModify(column, 0, message.from_user.id)
       bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are stop receiving messages")
   else:
     bot.send_message(message.chat.id, message.from_user.first_name + " " +  "you are not in database. Please join us click on /join" )
@@ -156,34 +180,78 @@ def handle_listusers(message):
        print "Error: unable to fecth data"
        bot.send_message(message.chat.id, "Error: unable to fecth data")
     db.close()
+
+class User:
+    def __init__(self, name):
+        self.name = name
+        self.telegramID = None
+        self.action = None
+
+@bot.message_handler(commands=['modifiy'])
+def process_name_step(message):
+  if adminCheck(message.from_user.id) == 1:
+      try:
+          chat_id = message.chat.id
+          name = message.text
+          user = User(name)
+          user_dict[chat_id] = user
+          msg = bot.reply_to(message, 'Enter user id. You can get it from /listusers')
+          bot.register_next_step_handler(msg, process_age_step)
+      except Exception as e:
+          bot.reply_to(message, 'Error')
   else:
     bot.send_message(message.chat.id, "You are not allowed execute this command")
 
 
-@bot.message_handler(commands=['blockuser'])
-def handle_blockuser(message):
-  bot.send_message(message.chat.id, "Blockuser section")
+def process_age_step(message):
+  try:
+      chat_id = message.chat.id
+      telegramID = message.text
+      if not telegramID.isdigit():
+          msg = bot.reply_to(message, 'ID should be a number')
+          bot.register_next_step_handler(msg, process_age_step)
+          return
+      user = user_dict[chat_id]
+      user.telegramID = telegramID
+      markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+      markup.add('Enable/Disable', 'Delete')
+      msg = bot.reply_to(message, 'What action you want do?', reply_markup=markup)
+      bot.register_next_step_handler(msg, process_action_step)
+  except Exception as e:
+      bot.reply_to(message, 'Error')
 
-@bot.message_handler(content_types=['text'])
-def handle_text(message):
-  answer = "I don't understand"
-  if message.text == "Hello" or message.text == "hello":
-    keyboard = telebot.types.InlineKeyboardMarkup()
-    callback_button = telebot.types.InlineKeyboardButton(text="Нажми меня", callback_data="test")
-    keyboard.add(callback_button)
-    bot.send_message(message.chat.id, "Я – сообщение из обычного режима", reply_markup=keyboard)
-  elif message.text == "bye" or message.text == "Bye":
-    bot.send_message(message.chat.id, "Good bye")
-  elif message.text == "test" or message.text == "test":
-    bot.send_message(message.chat.id, "TEST ME")
-  else:
-    bot.send_message(message.chat.id, answer)
 
-@bot.callback_query_handler(func=lambda call: True)
-def callback_inline(call):
-    # Если сообщение из чата с ботом
-    if call.message:
-        if call.data == "test":
-            bot.send_message(call.message.chat.id, "HELLO")
+def process_action_step(message):
+  try:
+      chat_id = message.chat.id
+      action = message.text
+      user = user_dict[chat_id]
+      if (action == u'Enable/Disable'):
+        column = 'active'
+        user.action = action
+        if checkUser(str(user.telegramID)) >= 1:
+          if enableCheck(str(user.telegramID)) == 1:
+            entryModify(column, 0, str(user.telegramID))
+            bot.send_message(chat_id, 'Telegram ID:' + " " + str(user.telegramID) + " " + 'enabled. Disabling .... ')
+            handle_start(message)
+          elif enableCheck(str(user.telegramID)) == 0:
+            entryModify(column, 1, str(user.telegramID))
+            bot.send_message(chat_id, 'Telegram ID:' + " " + str(user.telegramID) + " " + 'disabled. Enabling .... ')
+            handle_start(message)
+        else:
+          bot.send_message(chat_id, 'Telegram ID:' + " " + str(user.telegramID) + " " + 'not in database')
+          handle_start(message)
+      elif (action == u'Delete'):
+        if checkUser(str(user.telegramID)) >= 1:
+          deleteUser(str(user.telegramID))
+          bot.send_message(chat_id, 'Telegram ID:' + " " + str(user.telegramID) + " " + 'Deleted.')
+          handle_start(message)
+        else:
+          bot.send_message(chat_id, 'Telegram ID:' + " " + str(user.telegramID) + " " + 'not in database')
+          handle_start(message)
+      else:
+          raise Exception()
+  except Exception as e:
+      bot.reply_to(message, 'NOT OK')
 
 bot.polling(none_stop=True, interval=0)
